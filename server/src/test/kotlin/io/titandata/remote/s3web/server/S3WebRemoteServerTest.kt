@@ -52,8 +52,7 @@ class S3WebRemoteServerTest : StringSpec() {
             operationId = "operation",
             commitId = "commit",
             commit = null,
-            type = RemoteOperationType.PUSH,
-            data = null
+            type = RemoteOperationType.PUSH
     )
 
     override fun beforeTest(testCase: TestCase) {
@@ -184,21 +183,21 @@ class S3WebRemoteServerTest : StringSpec() {
 
         "start operation fails for push operation" {
             shouldThrow<NotImplementedError> {
-                server.startOperation(operation)
+                server.syncDataStart(operation)
             }
         }
 
         "start operation succeeds for pull operation" {
-            server.startOperation(operation.copy(type = RemoteOperationType.PULL))
+            server.syncDataStart(operation.copy(type = RemoteOperationType.PULL))
         }
 
         "end operation suceeds" {
-            server.endOperation(operation, true)
+            server.syncDataEnd(operation, null, true)
         }
 
         "push archive fails" {
             shouldThrow<NotImplementedError> {
-                server.pushArchive(operation, "volume", createTempFile())
+                server.pushArchive(operation, null, "volume", createTempFile())
             }
         }
 
@@ -217,7 +216,7 @@ class S3WebRemoteServerTest : StringSpec() {
             every { responseBody.byteStream() } returns ByteArrayInputStream("test".toByteArray())
 
             val file = createTempFile()
-            server.pullArchive(operation, "volume", file)
+            server.pullArchive(operation, null, "volume", file)
 
             file.readText() shouldBe "test"
 
@@ -233,7 +232,7 @@ class S3WebRemoteServerTest : StringSpec() {
             every { response.code } returns 403
 
             shouldThrow<IOException> {
-                server.pullArchive(operation, "volume", createTempFile())
+                server.pullArchive(operation, null, "volume", createTempFile())
             }
         }
     }

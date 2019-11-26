@@ -107,17 +107,17 @@ class S3WebRemoteServer : ArchiveRemote() {
         return match?.second
     }
 
-    override fun endOperation(operation: RemoteOperation, isSuccessful: Boolean) {
+    override fun syncDataEnd(operation: RemoteOperation, operationData: Any?, isSuccessful: Boolean) {
         // Do nothing
     }
 
-    override fun startOperation(operation: RemoteOperation) {
+    override fun syncDataStart(operation: RemoteOperation) {
         if (operation.type == RemoteOperationType.PUSH) {
             throw NotImplementedError("push operations are not supported with s3web remotes")
         }
     }
 
-    override fun pullArchive(operation: RemoteOperation, volume: String, archive: File) {
+    override fun pullArchive(operation: RemoteOperation, operationData: Any?, volume: String, archive: File) {
         val archivePath = "${operation.commitId}/$volume.tar.gz"
         val response = getFile(operation.remote, archivePath)
         if (!response.isSuccessful) {
@@ -130,7 +130,7 @@ class S3WebRemoteServer : ArchiveRemote() {
         }
     }
 
-    override fun pushArchive(operation: RemoteOperation, volume: String, archive: File) {
+    override fun pushArchive(operation: RemoteOperation, operationData: Any?, volume: String, archive: File) {
         throw NotImplementedError("push operations are not supported with s3web remotes")
     }
 
