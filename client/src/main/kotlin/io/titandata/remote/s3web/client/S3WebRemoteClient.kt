@@ -23,7 +23,10 @@ class S3WebRemoteClient : RemoteClient {
         return "s3web"
     }
 
-    override fun parseUri(uri: URI, additionalProperties: Map<String, String>): Map<String, Any> {
+    override fun parseUri(
+        uri: URI,
+        additionalProperties: Map<String, String>,
+    ): Map<String, Any> {
         val (username, password, host, port, path) = util.getConnectionInfo(uri)
 
         if (password != null) {

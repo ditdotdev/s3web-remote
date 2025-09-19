@@ -10,11 +10,11 @@ import io.titandata.remote.RemoteOperation
 import io.titandata.remote.RemoteOperationType
 import io.titandata.remote.RemoteServerUtil
 import io.titandata.remote.archive.ArchiveRemote
-import java.io.File
-import java.io.IOException
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
+import java.io.File
+import java.io.IOException
 
 /**
  * The S3 web provider is a very simple provider for reading commits created by the S3 provider. It's primary purpose is
@@ -27,7 +27,6 @@ import okhttp3.Response
  * at the root of the repository that has all the commit metadata.
  */
 class S3WebRemoteServer : ArchiveRemote() {
-
     internal val util = RemoteServerUtil()
     internal val gson = GsonBuilder().create()
     internal val http = OkHttpClient()
@@ -55,7 +54,10 @@ class S3WebRemoteServer : ArchiveRemote() {
     /**
      * Fetch a file from the given remote, returning as a response.
      */
-    fun getFile(remote: Map<String, Any>, path: String): Response {
+    fun getFile(
+        remote: Map<String, Any>,
+        path: String,
+    ): Response {
         val url = remote["url"] as String
         val request = Request.Builder().url("$url/$path").build()
         return http.newCall(request).execute()
@@ -68,13 +70,14 @@ class S3WebRemoteServer : ArchiveRemote() {
     internal fun getAllCommits(remote: Map<String, Any>): List<Pair<String, Map<String, Any>>> {
         val response = getFile(remote, "titan")
         val url = remote["url"] as String
-        val body = if (response.isSuccessful) {
-            response.body!!.string()
-        } else if (response.code == 404) {
-            ""
-        } else {
-            throw IOException("failed to get $url/titan, error code ${response.code}")
-        }
+        val body =
+            if (response.isSuccessful) {
+                response.body!!.string()
+            } else if (response.code == 404) {
+                ""
+            } else {
+                throw IOException("failed to get $url/titan, error code ${response.code}")
+            }
 
         val ret = mutableListOf<Pair<String, Map<String, Any>>>()
 
@@ -95,19 +98,31 @@ class S3WebRemoteServer : ArchiveRemote() {
         return ret
     }
 
-    override fun listCommits(remote: Map<String, Any>, parameters: Map<String, Any>, tags: List<Pair<String, String?>>): List<Pair<String, Map<String, Any>>> {
+    override fun listCommits(
+        remote: Map<String, Any>,
+        parameters: Map<String, Any>,
+        tags: List<Pair<String, String?>>,
+    ): List<Pair<String, Map<String, Any>>> {
         val commits = getAllCommits(remote)
         val matching = commits.filter { util.matchTags(it.second, tags) }
         return util.sortDescending(matching)
     }
 
-    override fun getCommit(remote: Map<String, Any>, parameters: Map<String, Any>, commitId: String): Map<String, Any>? {
+    override fun getCommit(
+        remote: Map<String, Any>,
+        parameters: Map<String, Any>,
+        commitId: String,
+    ): Map<String, Any>? {
         val commits = getAllCommits(remote)
         val match = commits.filter { it.first == commitId }.firstOrNull()
         return match?.second
     }
 
-    override fun syncDataEnd(operation: RemoteOperation, operationData: Any?, isSuccessful: Boolean) {
+    override fun syncDataEnd(
+        operation: RemoteOperation,
+        operationData: Any?,
+        isSuccessful: Boolean,
+    ) {
         // Do nothing
     }
 
@@ -117,7 +132,12 @@ class S3WebRemoteServer : ArchiveRemote() {
         }
     }
 
-    override fun pullArchive(operation: RemoteOperation, operationData: Any?, volume: String, archive: File) {
+    override fun pullArchive(
+        operation: RemoteOperation,
+        operationData: Any?,
+        volume: String,
+        archive: File,
+    ) {
         val archivePath = "${operation.commitId}/$volume.tar.gz"
         val response = getFile(operation.remote, archivePath)
         if (!response.isSuccessful) {
@@ -130,11 +150,20 @@ class S3WebRemoteServer : ArchiveRemote() {
         }
     }
 
-    override fun pushArchive(operation: RemoteOperation, operationData: Any?, volume: String, archive: File) {
+    override fun pushArchive(
+        operation: RemoteOperation,
+        operationData: Any?,
+        volume: String,
+        archive: File,
+    ) {
         throw NotImplementedError("push operations are not supported with s3web remotes")
     }
 
-    override fun pushMetadata(operation: RemoteOperation, commit: Map<String, Any>, isUpdate: Boolean) {
+    override fun pushMetadata(
+        operation: RemoteOperation,
+        commit: Map<String, Any>,
+        isUpdate: Boolean,
+    ) {
         throw NotImplementedError("push operations are not supported with s3web remotes")
     }
 }
