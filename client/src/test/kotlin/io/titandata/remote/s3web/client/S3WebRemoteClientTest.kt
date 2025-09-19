@@ -11,7 +11,6 @@ import io.kotlintest.specs.StringSpec
 import java.net.URI
 
 class S3WebRemoteClientTest : StringSpec() {
-
     var client = S3WebRemoteClient()
 
     override fun testCaseOrder() = TestCaseOrder.Random
