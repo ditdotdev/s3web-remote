@@ -1,8 +1,8 @@
 /*
- * Copyright The Titan Project Contributors.
+ * Copyright Datadatdat.
  */
 
-package io.titandata.remote.s3web.server
+package com.datadatdat.remote.s3web.server
 
 import io.kotlintest.TestCase
 import io.kotlintest.TestCaseOrder
@@ -21,9 +21,9 @@ import io.mockk.impl.annotations.SpyK
 import io.mockk.mockk
 import io.mockk.mockkConstructor
 import io.mockk.verify
-import io.titandata.remote.RemoteOperation
-import io.titandata.remote.RemoteOperationType
-import io.titandata.remote.RemoteProgress
+import com.datadatdat.remote.RemoteOperation
+import com.datadatdat.remote.RemoteOperationType
+import com.datadatdat.remote.RemoteProgress
 import okhttp3.Call
 import okhttp3.OkHttpClient
 import okhttp3.Request

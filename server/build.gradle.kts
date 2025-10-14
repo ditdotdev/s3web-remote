@@ -1,5 +1,5 @@
 /*
- * Copyright The Titan Project Contributors.
+ * Copyright Datadatdat.
  */
 
 plugins {
@@ -15,22 +15,22 @@ repositories {
     mavenCentral()
     maven("https://dl.bintray.com/kotlin/kotlinx")
     maven {
-        name = "titan"
+        name = "datadatdat"
         url = uri("https://datadatdat-maven.s3.amazonaws.com")
     }
 }
 
 dependencies {
-    implementation(kotlin("stdlib"))
-    implementation("io.titandata:remote-sdk:0.2.2")
-    implementation("com.google.code.gson:gson:2.13.2")
-    implementation("com.squareup.okhttp3:okhttp:5.2.1")
-    testImplementation("io.kotlintest:kotlintest-runner-junit5:3.4.2")
-    testImplementation("io.mockk:mockk:1.14.6")
+	implementation(kotlin("stdlib"))
+	implementation("com.datadatdat:remote-sdk:1.0.0")
+	implementation("com.google.code.gson:gson:2.13.2")
+	implementation("com.squareup.okhttp3:okhttp:5.2.1")
+	testImplementation("io.kotlintest:kotlintest-runner-junit5:3.4.2")
+	testImplementation("io.mockk:mockk:1.14.6")
 }
 
 // Jar configuration
-group = "io.titandata"
+group = "com.datadatdat"
 version = when(project.hasProperty("version")) {
     true -> project.property("version")!!
     false -> "latest"
@@ -52,18 +52,18 @@ val mavenBucket = when(project.hasProperty("mavenBucket")) {
 }
 
 publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            groupId = "io.titandata"
-            artifactId = "s3web-remote-server"
+	publications {
+		create<MavenPublication>("maven") {
+			groupId = "com.datadatdat"
+			artifactId = "s3web-remote-server"
 
-            from(components["java"])
-        }
-    }
+			from(components["java"])
+		}
+	}
 
     repositories {
         maven {
-            name = "titan"
+            name = "datadatdat"
             url = uri("s3://$mavenBucket")
             authentication {
                 create<AwsImAuthentication>("awsIm")

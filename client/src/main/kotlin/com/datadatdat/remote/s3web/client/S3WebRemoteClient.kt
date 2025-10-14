@@ -1,11 +1,11 @@
 /*
- * Copyright The Titan Project Contributors.
+ * Copyright Datadatdat.
  */
 
-package io.titandata.remote.s3web.client
+package com.datadatdat.remote.s3web.client
 
-import io.titandata.remote.RemoteClient
-import io.titandata.remote.RemoteClientUtil
+import com.datadatdat.remote.RemoteClient
+import com.datadatdat.remote.RemoteClientUtil
 import java.net.URI
 
 /**

@@ -1,15 +1,15 @@
 /*
- * Copyright The Titan Project Contributors.
+ * Copyright Datadatdat.
  */
 
-package io.titandata.remote.s3web.server
+package com.datadatdat.remote.s3web.server
 
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
-import io.titandata.remote.RemoteOperation
-import io.titandata.remote.RemoteOperationType
-import io.titandata.remote.RemoteServerUtil
-import io.titandata.remote.archive.ArchiveRemote
+import com.datadatdat.remote.RemoteOperation
+import com.datadatdat.remote.RemoteOperationType
+import com.datadatdat.remote.RemoteServerUtil
+import com.datadatdat.remote.archive.ArchiveRemote
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -21,9 +21,9 @@ import java.io.IOException
  * to make public demo data available without requiring people to have some kind of AWS credentials. It should not be
  * used as a general purpose remote. The URL can be any URL to the S3 bucket, even behind CloudFront, such as:
  *
- *      s3web://demo.titan-data.io/hello-world/postgres
+ *      s3web://demo.datadatdat-data.io/hello-world/postgres
  *
- * The main thing is that it expects to find the same layout as the S3 provider generates, including a "titan" file
+ * The main thing is that it expects to find the same layout as the S3 provider generates, including a "datadatdat" file
  * at the root of the repository that has all the commit metadata.
  */
 class S3WebRemoteServer : ArchiveRemote() {
@@ -68,7 +68,7 @@ class S3WebRemoteServer : ArchiveRemote() {
      * a commit we use it for both listing commits and fetching individual commits. It is not particuarly efficient.
      */
     internal fun getAllCommits(remote: Map<String, Any>): List<Pair<String, Map<String, Any>>> {
-        val response = getFile(remote, "titan")
+        val response = getFile(remote, "datadatdat")
         val url = remote["url"] as String
         val body =
             if (response.isSuccessful) {
@@ -76,7 +76,7 @@ class S3WebRemoteServer : ArchiveRemote() {
             } else if (response.code == 404) {
                 ""
             } else {
-                throw IOException("failed to get $url/titan, error code ${response.code}")
+                throw IOException("failed to get $url/datadatdat, error code ${response.code}")
             }
 
         val ret = mutableListOf<Pair<String, Map<String, Any>>>()
