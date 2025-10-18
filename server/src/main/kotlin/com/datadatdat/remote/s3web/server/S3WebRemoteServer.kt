@@ -4,12 +4,12 @@
 
 package com.datadatdat.remote.s3web.server
 
-import com.google.gson.GsonBuilder
-import com.google.gson.reflect.TypeToken
 import com.datadatdat.remote.RemoteOperation
 import com.datadatdat.remote.RemoteOperationType
 import com.datadatdat.remote.RemoteServerUtil
 import com.datadatdat.remote.archive.ArchiveRemote
+import com.google.gson.GsonBuilder
+import com.google.gson.reflect.TypeToken
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
