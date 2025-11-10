@@ -50,7 +50,9 @@ class S3WebRemoteServer : ArchiveRemote() {
         val params = parameters ?: emptyMap()
         util.validateFields(params, emptyList(), emptyList())
         return params
-    }    /**
+    }
+
+    /**
      * Fetch a file from the given remote, returning as a response.
      */
     fun getFile(
