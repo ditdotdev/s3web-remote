@@ -44,14 +44,13 @@ class S3WebRemoteServer : ArchiveRemote() {
     }
 
     /**
-     * S3 web parameters must always be empty
+     * Validate parameters, which are all optional (there are no supported parameters currently).
      */
-    override fun validateParameters(parameters: Map<String, Any>): Map<String, Any> {
-        util.validateFields(parameters, emptyList(), emptyList())
-        return parameters
-    }
-
-    /**
+    override fun validateParameters(parameters: Map<String, Any>?): Map<String, Any> {
+        val params = parameters ?: emptyMap()
+        util.validateFields(params, emptyList(), emptyList())
+        return params
+    }    /**
      * Fetch a file from the given remote, returning as a response.
      */
     fun getFile(
