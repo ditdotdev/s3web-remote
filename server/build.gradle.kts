@@ -25,7 +25,7 @@ dependencies {
 	implementation("com.google.code.gson:gson:2.13.2")
 	implementation("com.squareup.okhttp3:okhttp:5.3.2")
 	testImplementation("io.kotlintest:kotlintest-runner-junit5:3.4.2")
-	testImplementation("io.mockk:mockk:1.14.6")
+	testImplementation("io.mockk:mockk:1.14.7")
 }
 
 // Jar configuration
