@@ -73,7 +73,7 @@ class S3WebRemoteServer : ArchiveRemote() {
         val url = remote["url"] as String
         val body =
             if (response.isSuccessful) {
-                response.body!!.string()
+                response.body.string()
             } else if (response.code == 404) {
                 ""
             } else {
@@ -144,7 +144,7 @@ class S3WebRemoteServer : ArchiveRemote() {
         if (!response.isSuccessful) {
             throw IOException("failed to get ${operation.remote["url"]}/$archivePath, error code ${response.code}")
         }
-        response.body!!.byteStream().use { input ->
+        response.body.byteStream().use { input ->
             archive.outputStream().use { output ->
                 input.copyTo(output)
             }
