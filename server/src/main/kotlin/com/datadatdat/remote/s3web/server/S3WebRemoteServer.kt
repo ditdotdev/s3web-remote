@@ -15,6 +15,7 @@ import okhttp3.Request
 import okhttp3.Response
 import java.io.File
 import java.io.IOException
+import java.time.Duration
 
 /**
  * The S3 web provider is a very simple provider for reading commits created by the S3 provider. It's primary purpose is
@@ -29,7 +30,12 @@ import java.io.IOException
 class S3WebRemoteServer : ArchiveRemote() {
     internal val util = RemoteServerUtil()
     internal val gson = GsonBuilder().create()
-    internal val http = OkHttpClient()
+    internal val http =
+        OkHttpClient.Builder()
+            .connectTimeout(Duration.ofSeconds(10))
+            .readTimeout(Duration.ofSeconds(30))
+            .writeTimeout(Duration.ofSeconds(30))
+            .build()
 
     override fun getProvider(): String {
         return "s3web"
@@ -53,13 +59,22 @@ class S3WebRemoteServer : ArchiveRemote() {
     }
 
     /**
+     * Extract the "url" property from a remote map as a String, throwing a clean
+     * IllegalArgumentException rather than ClassCastException if the value is not a String.
+     */
+    private fun remoteUrl(remote: Map<String, Any>): String {
+        return remote["url"] as? String
+            ?: throw IllegalArgumentException("url must be a string")
+    }
+
+    /**
      * Fetch a file from the given remote, returning as a response.
      */
     fun getFile(
         remote: Map<String, Any>,
         path: String,
     ): Response {
-        val url = remote["url"] as String
+        val url = remoteUrl(remote)
         val request = Request.Builder().url("$url/$path").build()
         return http.newCall(request).execute()
     }
@@ -69,29 +84,35 @@ class S3WebRemoteServer : ArchiveRemote() {
      * a commit we use it for both listing commits and fetching individual commits. It is not particuarly efficient.
      */
     internal fun getAllCommits(remote: Map<String, Any>): List<Pair<String, Map<String, Any>>> {
-        val response = getFile(remote, "datadatdat")
-        val url = remote["url"] as String
-        val body =
-            if (response.isSuccessful) {
-                response.body.string()
-            } else if (response.code == 404) {
-                ""
-            } else {
-                throw IOException("failed to get $url/datadatdat, error code ${response.code}")
-            }
-
         val ret = mutableListOf<Pair<String, Map<String, Any>>>()
 
-        for (line in body.split("\n")) {
-            if (line != "") {
-                val result: Map<String, Any> = gson.fromJson(line, object : TypeToken<Map<String, Any>>() {}.type)
-                val id = result.get("id")
-                val properties = result.get("properties")
-                if (id != null && properties != null) {
-                    id as String
-                    @Suppress("UNCHECKED_CAST")
-                    properties as Map<String, Any>
-                    ret.add(id to properties)
+        getFile(remote, "datadatdat").use { response ->
+            val body =
+                when {
+                    response.isSuccessful -> response.body.string()
+                    response.code == 404 -> ""
+                    else -> {
+                        val url = remoteUrl(remote)
+                        throw IOException("failed to get $url/datadatdat, error code ${response.code}")
+                    }
+                }
+
+            for (line in body.split("\n")) {
+                if (line != "") {
+                    val result: Map<String, Any> = gson.fromJson(line, object : TypeToken<Map<String, Any>>() {}.type)
+                    val id = result.get("id")
+                    val properties = result.get("properties")
+                    if (id != null && properties != null) {
+                        val idString =
+                            id as? String
+                                ?: throw IllegalArgumentException("commit id must be a string")
+
+                        @Suppress("UNCHECKED_CAST")
+                        val propertiesMap =
+                            properties as? Map<String, Any>
+                                ?: throw IllegalArgumentException("commit properties must be a map")
+                        ret.add(idString to propertiesMap)
+                    }
                 }
             }
         }

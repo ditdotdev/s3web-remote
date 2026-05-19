@@ -96,6 +96,11 @@ class S3WebRemoteServerTest : StringSpec() {
             result.size shouldBe 0
         }
 
+        "validate parameters succeeds with null input" {
+            val result = server.validateParameters(null)
+            result.size shouldBe 0
+        }
+
         "validate parameters fails with invalid property" {
             shouldThrow<IllegalArgumentException> {
                 server.validateRemote(mapOf("foo" to "bar"))
@@ -114,7 +119,7 @@ class S3WebRemoteServerTest : StringSpec() {
         }
 
         "getAllCommits succeeds" {
-            val response: Response = mockk()
+            val response: Response = mockk(relaxed = true)
             every { server.getFile(any(), any()) } returns response
             every { response.isSuccessful } returns true
             val responseBody: ResponseBody = mockk()
@@ -133,7 +138,7 @@ class S3WebRemoteServerTest : StringSpec() {
         }
 
         "getAllCommits returns empty list on 404" {
-            val response: Response = mockk()
+            val response: Response = mockk(relaxed = true)
             every { server.getFile(any(), any()) } returns response
             every { response.isSuccessful } returns false
             every { response.code } returns 404
@@ -142,7 +147,7 @@ class S3WebRemoteServerTest : StringSpec() {
         }
 
         "getAllCommits throws exception on unknown error" {
-            val response: Response = mockk()
+            val response: Response = mockk(relaxed = true)
             every { server.getFile(any(), any()) } returns response
             every { response.isSuccessful } returns false
             every { response.code } returns 403
@@ -247,6 +252,132 @@ class S3WebRemoteServerTest : StringSpec() {
 
             shouldThrow<IOException> {
                 server.pullArchive(operation, null, "volume", createTempFile().toFile())
+            }
+        }
+
+        "http client has non-zero connect, read, and write timeouts" {
+            // Default OkHttpClient has no timeouts (all zero), which can hang on a stalled
+            // S3-website endpoint indefinitely. Verify the client is configured with explicit
+            // non-zero timeouts.
+            server.http.connectTimeoutMillis shouldNotBe 0
+            server.http.readTimeoutMillis shouldNotBe 0
+            server.http.writeTimeoutMillis shouldNotBe 0
+        }
+
+        "http client uses expected timeout values" {
+            // Concrete values per the architecture review fix:
+            //   connectTimeout = 10s, readTimeout = 30s, writeTimeout = 30s
+            server.http.connectTimeoutMillis shouldBe 10_000
+            server.http.readTimeoutMillis shouldBe 30_000
+            server.http.writeTimeoutMillis shouldBe 30_000
+        }
+
+        "getAllCommits closes the response on success" {
+            val response: Response = mockk(relaxed = true)
+            every { server.getFile(any(), any()) } returns response
+            every { response.isSuccessful } returns true
+            val responseBody: ResponseBody = mockk()
+            every { response.body } returns responseBody
+            every { responseBody.string() } returns ""
+
+            server.getAllCommits(mapOf("url" to "http://host"))
+
+            verify { response.close() }
+        }
+
+        "getAllCommits closes the response on 404" {
+            val response: Response = mockk(relaxed = true)
+            every { server.getFile(any(), any()) } returns response
+            every { response.isSuccessful } returns false
+            every { response.code } returns 404
+
+            server.getAllCommits(mapOf("url" to "http://host"))
+
+            verify { response.close() }
+        }
+
+        "getAllCommits closes the response on error" {
+            val response: Response = mockk(relaxed = true)
+            every { server.getFile(any(), any()) } returns response
+            every { response.isSuccessful } returns false
+            every { response.code } returns 403
+
+            shouldThrow<IOException> {
+                server.getAllCommits(mapOf("url" to "http://host"))
+            }
+
+            verify { response.close() }
+        }
+
+        "getFile throws IllegalArgumentException when url is not a string" {
+            // Unsafe `as String` cast would throw ClassCastException with a confusing
+            // message. Verify we throw a clean IllegalArgumentException instead.
+            shouldThrow<IllegalArgumentException> {
+                server.getFile(mapOf("url" to 42), "path")
+            }
+        }
+
+        "getAllCommits throws IllegalArgumentException when url is not a string on error path" {
+            // The error-path `as String` cast in getAllCommits would also panic on bad input.
+            val response: Response = mockk(relaxed = true)
+            every { server.getFile(any(), any()) } returns response
+            every { response.isSuccessful } returns false
+            every { response.code } returns 500
+
+            shouldThrow<IllegalArgumentException> {
+                server.getAllCommits(mapOf("url" to 42))
+            }
+        }
+
+        "getAllCommits throws IllegalArgumentException when id is not a string" {
+            val response: Response = mockk(relaxed = true)
+            every { server.getFile(any(), any()) } returns response
+            every { response.isSuccessful } returns true
+            val responseBody: ResponseBody = mockk()
+            every { response.body } returns responseBody
+            every { responseBody.string() } returns
+                "{\"id\":42,\"properties\":{\"timestamp\":\"2019-09-20T13:45:36Z\"}}"
+
+            shouldThrow<IllegalArgumentException> {
+                server.getAllCommits(mapOf("url" to "http://host"))
+            }
+        }
+
+        "getAllCommits skips lines missing id or properties" {
+            // Lines with neither id nor properties, or only one, should be silently skipped.
+            // This exercises the null-branches of `if (id != null && properties != null)`.
+            val response: Response = mockk(relaxed = true)
+            every { server.getFile(any(), any()) } returns response
+            every { response.isSuccessful } returns true
+            val responseBody: ResponseBody = mockk()
+            every { response.body } returns responseBody
+            every { responseBody.string() } returns
+                arrayOf(
+                    // Missing properties
+                    "{\"id\":\"a\"}",
+                    // Missing id
+                    "{\"properties\":{\"timestamp\":\"2019-09-20T13:45:36Z\"}}",
+                    // Both missing
+                    "{}",
+                    // Valid
+                    "{\"id\":\"c\",\"properties\":{\"timestamp\":\"2019-09-20T13:45:38Z\"}}",
+                ).joinToString("\n")
+            val commits = server.getAllCommits(mapOf("url" to "http://host"))
+            commits.size shouldBe 1
+            commits[0].first shouldBe "c"
+        }
+
+        "getAllCommits throws IllegalArgumentException when properties is not a map" {
+            val response: Response = mockk(relaxed = true)
+            every { server.getFile(any(), any()) } returns response
+            every { response.isSuccessful } returns true
+            val responseBody: ResponseBody = mockk()
+            every { response.body } returns responseBody
+            every { responseBody.string() } returns
+                "{\"id\":\"a\",\"properties\":\"not-a-map\"}"
+
+            shouldThrow<IllegalArgumentException> {
+                server.getAllCommits(mapOf("url" to "http://host"))
             }
         }
     }
