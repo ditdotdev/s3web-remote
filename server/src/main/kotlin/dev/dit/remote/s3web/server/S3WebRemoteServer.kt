@@ -1,15 +1,15 @@
 /*
- * Copyright Datadatdat.
+ * Copyright Dit.
  */
 
-package com.datadatdat.remote.s3web.server
+package dev.dit.remote.s3web.server
 
-import com.datadatdat.remote.RemoteOperation
-import com.datadatdat.remote.RemoteOperationType
-import com.datadatdat.remote.RemoteServerUtil
-import com.datadatdat.remote.archive.ArchiveRemote
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
+import dev.dit.remote.RemoteOperation
+import dev.dit.remote.RemoteOperationType
+import dev.dit.remote.RemoteServerUtil
+import dev.dit.remote.archive.ArchiveRemote
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -22,9 +22,9 @@ import java.time.Duration
  * to make public demo data available without requiring people to have some kind of AWS credentials. It should not be
  * used as a general purpose remote. The URL can be any URL to the S3 bucket, even behind CloudFront, such as:
  *
- *      s3web://demo.datadatdat-data.io/hello-world/postgres
+ *      s3web://demo.dit-data.io/hello-world/postgres
  *
- * The main thing is that it expects to find the same layout as the S3 provider generates, including a "datadatdat" file
+ * The main thing is that it expects to find the same layout as the S3 provider generates, including a "dit" file
  * at the root of the repository that has all the commit metadata.
  */
 class S3WebRemoteServer : ArchiveRemote() {
@@ -86,14 +86,14 @@ class S3WebRemoteServer : ArchiveRemote() {
     internal fun getAllCommits(remote: Map<String, Any>): List<Pair<String, Map<String, Any>>> {
         val ret = mutableListOf<Pair<String, Map<String, Any>>>()
 
-        getFile(remote, "datadatdat").use { response ->
+        getFile(remote, "dit").use { response ->
             val body =
                 when {
                     response.isSuccessful -> response.body.string()
                     response.code == 404 -> ""
                     else -> {
                         val url = remoteUrl(remote)
-                        throw IOException("failed to get $url/datadatdat, error code ${response.code}")
+                        throw IOException("failed to get $url/dit, error code ${response.code}")
                     }
                 }
 
