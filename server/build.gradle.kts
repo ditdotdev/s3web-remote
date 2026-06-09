@@ -23,7 +23,7 @@ dependencies {
 	implementation(kotlin("stdlib"))
 	implementation("dev.dit:remote-sdk:1.9.3")
 	implementation("com.google.code.gson:gson:2.14.0")
-	implementation("com.squareup.okhttp3:okhttp:5.3.2")
+	implementation("com.squareup.okhttp3:okhttp:5.4.0")
 	testImplementation("io.kotlintest:kotlintest-runner-junit5:3.4.2")
 	testImplementation("io.mockk:mockk:1.14.11")
 }
