@@ -21,7 +21,7 @@ import java.time.Duration
  * to make public demo data available without requiring people to have some kind of AWS credentials. It should not be
  * used as a general purpose remote. The URL can be any URL to the S3 bucket, even behind CloudFront, such as:
  *
- *      s3web://demo.dit-data.io/hello-world/postgres
+ *      s3web://demos.dit.dev/hello-world/postgres
  *
  * The main thing is that it expects to find the same layout as the S3 provider generates, including a "dit" file
  * at the root of the repository that has all the commit metadata.
